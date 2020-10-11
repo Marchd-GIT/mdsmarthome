@@ -185,7 +185,9 @@ async function getDeviceListState() {
     return yandexListDevices;
 }
 async function validateUserYandex(token) {
+    let logger = log4js.getLogger("validateUserYandex");
     let user_info = await getUserInfo(token);
+    logger.trace("Login: ",user_info.login);
     return user_info && user_info.login == "MarchD" ? true : false
 }
 async function runAction(id) {
@@ -245,12 +247,13 @@ const cacheHttpGetJsontTTL = app_config.cache ? app_config.cache.cacheHttpGetJso
 const redis = new Redis(redisPort, redisHost);
 async function cacheHttpGetJson(key, url, opts = {}) {
     let logger = log4js.getLogger("cacheHttpGetJson");
-    let result = await redis.get(key);
+    let cache = await redis.get(key);
+    let result = cache ? JSON.parse(cache): false;
     if (!result) {
         try {
             response = await fetch(url, opts);
             result = await response.json();
-            redis.set(key, result, "EX", cacheHttpGetJsontTTL);
+            redis.set(key, JSON.stringify(result), "EX", cacheHttpGetJsontTTL);
             logger.trace(app_config.oauth.userinfo_url, response.status, JSON.stringify(response));
         }
         catch (e) {
