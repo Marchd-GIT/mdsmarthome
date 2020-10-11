@@ -23,9 +23,9 @@ async function getDeviceListState() {
         "payload": {
             "user_id": "321",
             devices: [{
-                "id": "100",
+                "id": "101",
                 "name": "Свет",
-                "room": "Холл",
+                "room": "Коридор",
                 "type": "devices.types.light",
                 "capabilities": [
                     {
@@ -33,7 +33,52 @@ async function getDeviceListState() {
                         "retrievable": true,
                         "state": {
                             "instance": "on",
-                            "value": await getLampStatus()
+                            "value": await getLampStatus(1)
+                        }
+                    }
+                ],
+            }, {
+                "id": "102",
+                "name": "Свет",
+                "room": "Кухня",
+                "type": "devices.types.light",
+                "capabilities": [
+                    {
+                        "type": "devices.capabilities.on_off",
+                        "retrievable": true,
+                        "state": {
+                            "instance": "on",
+                            "value": await getLampStatus(2)
+                        }
+                    }
+                ],
+            }, {
+                "id": "103",
+                "name": "Свет",
+                "room": "Гостиная",
+                "type": "devices.types.light",
+                "capabilities": [
+                    {
+                        "type": "devices.capabilities.on_off",
+                        "retrievable": true,
+                        "state": {
+                            "instance": "on",
+                            "value": await getLampStatus(3)
+                        }
+                    }
+                ],
+            }, {
+                "id": "104",
+                "name": "Свет",
+                "room": "Спальня",
+                "type": "devices.types.light",
+                "capabilities": [
+                    {
+                        "type": "devices.capabilities.on_off",
+                        "retrievable": true,
+                        "state": {
+                            "instance": "on",
+                            "value": await getLampStatus(4)
                         }
                     }
                 ],
@@ -147,10 +192,19 @@ async function runAction(id) {
     let logger = log4js.getLogger("runAction");
     let state = await cleanGetState();
     logger.trace("state: ", state);
-    if (state != "[6]" || id < 199 ) {
+    if (state != "[6]" || id < 199) {
         switch (id) {
-            case "100":
-                lampOnOff();
+            case "101":
+                lampOnOff(1);
+                break;
+            case "102":
+                lampOnOff(2);
+                break;
+            case "103":
+                lampOnOff(3);
+                break;
+            case "104":
+                lampOnOff(4);
                 break;
             case "200":
                 cleanStartFull();
@@ -240,30 +294,30 @@ async function cleanGetState() {
 
 
 //////////////////////////lights
-async function lampOnOff() {
-    let status = await getLampStatus();
+async function lampOnOff(num) {
+    let status = await getLampStatus(num);
     if (status === true) {
-        fetch("http://10.20.0.201/ctl?l1=0");
-        logger.info("http://10.20.0.201/ctl?l1=0");
+        fetch("http://10.20.0.201/ctl?l" + num + "=0");
+        logger.info("http://10.20.0.201/ctl?l" + num + "=0");
     }
     else {
-        fetch("http://10.20.0.201/ctl?l1=1");
-        logger.info("http://10.20.0.201/ctl?l1=1");
+        fetch("http://10.20.0.201/ctl?l" + num + "=1");
+        logger.info("http://10.20.0.201/ctl?l" + num + "=1");
     }
 
 }
-async function getLampStatus(room, id) {
+async function getLampStatus(num) {
     let logger = log4js.getLogger("getLampStatus");
     let status = false;
     try {
-        const response = await fetch("http://10.20.0.201/stat/l1");
+        const response = await fetch("http://10.20.0.201/stat/l" + num);
         status = await response.json();
-        logger.info("http://10.20.0.201/stat/l1", response.status, JSON.stringify(status));
+        logger.info("http://10.20.0.201/stat/l" + num, response.status, JSON.stringify(status));
     }
     catch (e) {
-        logger.error(e.response.body)
+        logger.error(e)
     }
-    return status.l1 && status.l1 == 1 ? true : false;
+    return status["l"+num] && status["l"+num] == 1 ? true : false;
 }
 ////////////////////////////////
 
@@ -345,38 +399,72 @@ const requestListener = async function (req, res) {
             }
             break;
         case "/smart_home/v1.0/user/devices/query":
-            res.writeHead(200);
-            logger.info('/smart_home/v1.0/user/devices/query');
-            res.end(JSON.stringify(await getDeviceListState()));
+            if (validateUserYandex(token)) {
+                res.writeHead(200);
+                logger.info('/smart_home/v1.0/user/devices/query');
+                res.end(JSON.stringify(await getDeviceListState()));
+
+            }
+            else {
+                res.writeHead(403);
+            }
             break;
         case "/smart_home/v1.0/user/devices/action":
-            res.writeHead(200);
-            logger.info('/smart_home/v1.0/user/devices/action');
-            let data = []
-            req.on('data', chunk => {
-                data.push(chunk)
-            });
-            req.on('end', async() => {
-                logger.trace(data.toString());
-
-                let id = JSON.parse(data).payload.devices[0].id;
-                let sendlist = Object.assign({}, yandexListDevices);
-                yandexListDevices.payload.devices.forEach((device, index) => {
-                    if (device.id == id) {
-                        runAction(id);
-                        logger.trace(id);
-                        sendlist.payload.devices[index].capabilities[0].state.action_result = {"status": "DONE"};
-                        delete(sendlist.payload.devices[index].capabilities[0].state.value);
-                        logger.trace(JSON.stringify(sendlist));
-                    }
+            if (validateUserYandex(token)) {
+                res.writeHead(200);
+                logger.info('/smart_home/v1.0/user/devices/action');
+                let data = []
+                req.on('data', chunk => {
+                    data.push(chunk)
                 });
-                res.end(JSON.stringify(sendlist));
-            });
+                req.on('end', async() => {
+
+                    logger.trace(data.toString());
+
+                    let id = JSON.parse(data).payload.devices[0].id;
+                    let sendlist = Object.assign({}, yandexListDevices);
+                    yandexListDevices.payload.devices.forEach((device, index) => {
+                        if (device.id == id) {
+                            runAction(id);
+                            logger.trace(id);
+                            sendlist.payload.devices[index].capabilities[0].state.action_result = {"status": "DONE"};
+                            delete(sendlist.payload.devices[index].capabilities[0].state.value);
+                            logger.trace(JSON.stringify(sendlist));
+                        }
+                    });
+                    res.end(JSON.stringify(sendlist));
+                });
+            }
+            else {
+                res.writeHead(403);
+            }
+            break;
+        case "/smart_home/vacuum_cleaner": // Навык Общего типа заглушка
+            res.writeHead(200);
+            logger.info('/smart_home/vacuum_cleaner');
+            res.end(JSON.stringify(
+                {
+                    "response": {
+                        "text": "Здравствуйте! Это мы, хороводоведы.",
+                        "tts": "Здравствуйте! Это мы, хоров+одо в+еды.",
+                        "buttons": [
+                            {
+                                "title": "Надпись на кнопке",
+                                "payload": {},
+                                "url": "https://example.com/",
+                                "hide": true
+                            }
+                        ],
+                        "end_session": false
+                    },
+                    "version": "1.0"
+                }
+            ));
             break;
         default:
-            res.writeHead(404);
-            res.end(JSON.stringify({error: "Command not found"}));
-            logger.error(req.url, req.data, "Command not found");
+            res.writeHead(200);
+            res.end(JSON.stringify({error: "Command not found, return 200 ok"}));
+            logger.error(req.url, req.data, "ok");
     }
 };
 
