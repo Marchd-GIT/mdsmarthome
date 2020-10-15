@@ -34,7 +34,7 @@ class YandexDialog {
                             "retrievable": true,
                             "state": {
                                 "instance": "on",
-                                "value": await lights.getLampStatus(1)
+                                "value": await lights.getLampStatus("4Lamps", 1)
                             }
                         }
                     ],
@@ -49,7 +49,7 @@ class YandexDialog {
                             "retrievable": true,
                             "state": {
                                 "instance": "on",
-                                "value": await lights.getLampStatus(2)
+                                "value": await lights.getLampStatus("4Lamps", 2)
                             }
                         }
                     ],
@@ -64,7 +64,7 @@ class YandexDialog {
                             "retrievable": true,
                             "state": {
                                 "instance": "on",
-                                "value": await lights.getLampStatus(3)
+                                "value": await lights.getLampStatus("4Lamps", 3)
                             }
                         }
                     ],
@@ -79,9 +79,42 @@ class YandexDialog {
                             "retrievable": true,
                             "state": {
                                 "instance": "on",
-                                "value": await lights.getLampStatus(4)
+                                "value": await lights.getLampStatus("4Lamps", 4)
                             }
                         }
+                    ],
+                }, {
+                    "id": "105",
+                    "name": "Свет",
+                    "room": "Ванна",
+                    "type": "devices.types.light",
+                    "capabilities": [
+                        {
+                            "type": "devices.capabilities.on_off",
+                            "retrievable": true,
+                            "state": {
+                                "instance": "on",
+                                "value": await lights.getLampStatus("bathroom", 1)
+                            }
+                        }, {
+                            "type": "devices.capabilities.range",
+                            "state": {
+                                "instance": "brightness",
+                                "relative": true,
+                                "value": await lights.getLampValue("bathroom", 1),
+                            },
+                            "retrievable": true,
+                            "parameters": {
+                                "instance": "brightness",
+                                "random_access": true,
+                                "range": {
+                                    "max": 100,
+                                    "min": 1,
+                                    "precision": 10
+                                },
+                                "unit": "unit.percent"
+                            }
+                        },
                     ],
                 },
                     {
@@ -193,22 +226,25 @@ class YandexDialog {
         return user_info && user_info.login == "MarchD" ? true : false
     }
 
-    async runAction(id) {
+    async runActionOnOff(id) {
         let state = await vacuumCleaner.cleanGetState();
         logger.trace("state: ", state);
         if (state != "[6]" || id < 199) {
             switch (id) {
                 case "101":
-                    lights.lampOnOff(1);
+                    lights.lampOnOff("4Lamps", 1);
                     break;
                 case "102":
-                    lights.lampOnOff(2);
+                    lights.lampOnOff("4Lamps", 2);
                     break;
                 case "103":
-                    lights.lampOnOff(3);
+                    lights.lampOnOff("4Lamps", 3);
                     break;
                 case "104":
-                    lights.lampOnOff(4);
+                    lights.lampOnOff("4Lamps", 4);
+                    break;
+                case "105":
+                    lights.lampOnOff("bathroom", 1);
                     break;
                 case "200":
                     vacuumCleaner.cleanStartFull();
@@ -232,6 +268,16 @@ class YandexDialog {
         }
         else {
             await vacuumCleaner.cleanReturnHome();
+        }
+    }
+
+    async runActionRange(id, value, relative) {
+        switch (id) {
+            case "105":
+                relative ?
+                    lights.lampSetValue("bathroom", 1, value + await lights.getLampValue("bathroom", 1)) :
+                    lights.lampSetValue("bathroom", 1, value);
+                break;
         }
     }
 

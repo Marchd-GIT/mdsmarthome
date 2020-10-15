@@ -1,3 +1,4 @@
+const app_config = (require('read-appsettings-json').AppConfiguration).json;
 const miio = require('miio');
 const fetch = require('node-fetch');
 const log4js = require('log4js');
@@ -5,34 +6,55 @@ let logger = log4js.getLogger();
 
 
 class Lights {
-
-    async lampOnOff(num) {
+    async lampOnOff(lamp,num) {
+        let url = app_config.MD_lamps[lamp].url;
         let status = await
-            this.getLampStatus(num);
+            this.getLampStatus(lamp,num);
         if (status === true) {
-            fetch("http://10.20.0.201/ctl?l" + num + "=0");
-            logger.info("http://10.20.0.201/ctl?l" + num + "=0");
+            fetch(url +"/ctl?l" + num + "=0");
+            logger.info(url+"/ctl?l" + num + "=0");
         }
         else {
-            fetch("http://10.20.0.201/ctl?l" + num + "=1");
-            logger.info("http://10.20.0.201/ctl?l" + num + "=1");
+            fetch(url+"/ctl?l" + num + "=1");
+            logger.info(url+"/ctl?l" + num + "=1");
         }
-
     }
 
-    async getLampStatus(num) {
+    async lampSetValue(lamp,num,value) {
+        let url = app_config.MD_lamps[lamp].url;
+        fetch(url+"/ctlv?l" + num + "="+value);
+        logger.info(url+"/ctlv?l" + num + "="+value);
+    }
+
+    async getLampStatus(lamp,num) {
+        let url = app_config.MD_lamps[lamp].url;
         let logger = log4js.getLogger("getLampStatus");
         let status = false;
         try {
-            const response = await fetch("http://10.20.0.201/stat/l" + num);
+            const response = await fetch(url+"/stat/l" + num);
             status = await
                 response.json();
-            logger.info("http://10.20.0.201/stat/l" + num, response.status, JSON.stringify(status));
+            logger.info(url+"/stat/l" + num, response.status, JSON.stringify(status));
         }
         catch (e) {
             logger.error(e)
         }
         return status["l" + num] && status["l" + num] == 1 ? true : false;
+    }
+    async getLampValue(lamp,num) {
+        let url = app_config.MD_lamps[lamp].url;
+        let logger = log4js.getLogger("getLampValue");
+        let status = false;
+        try {
+            const response = await fetch(url+"/stat/l" + num);
+            status = await
+                response.json();
+            logger.info(url+"/stat/l" + num, response.status, JSON.stringify(status));
+        }
+        catch (e) {
+            logger.error(e)
+        }
+        return status.value;
     }
 }
 
