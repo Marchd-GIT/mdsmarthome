@@ -17,10 +17,10 @@ let lights = new Lights();
 
 
 class YandexDialog {
-    async getDeviceListState() {
+    async getDeviceListState(requestid) {
         let yandexListDevices =
         {
-            "request_id": "123",
+            "request_id": requestid,
             "payload": {
                 "user_id": "321",
                 devices: [{
@@ -279,6 +279,50 @@ class YandexDialog {
                     lights.lampSetValue("bathroom", 1, value);
                 break;
         }
+    }
+
+    runActionControl(data,yandexListDevices,requestid) {
+        let sendlist = Object.assign({}, yandexListDevices);
+        let dataObj = JSON.parse(data);
+        dataObj.payload.devices.forEach((device, index) => {
+            device.capabilities.forEach((cap, index_cap) => {
+                switch (cap.type) {
+                    case  "devices.capabilities.range" :
+                        this.runActionRange(device.id, cap.state.value, cap.state.relative ? cap.state.relative : false);
+                        logger.trace("RUN devices.capabilities.range", device.id, index, index_cap, cap.state.value);
+                        yandexListDevices.payload.devices.forEach((device_list, index_list) => {
+                            if (device_list.id == device.id) {
+                                device_list.capabilities.forEach((cap_list, index_cap_list) => {
+                                    if (cap_list.type == cap.type) {
+                                        sendlist.request_id = requestid;
+                                        sendlist.payload.devices[index_list].capabilities[index_cap_list].state.action_result = {"status": "DONE"};
+                                        delete(sendlist.payload.devices[index_list].capabilities[index_cap_list].state.value);
+                                        logger.trace("SEND LIST:", JSON.stringify(sendlist));
+                                    }
+                                })
+                            }
+                        });
+                        break;
+                    case  "devices.capabilities.on_off" :
+                        this.runActionOnOff(device.id, index, index_cap);
+                        logger.trace("RUN devices.capabilities.on_off", device.id);
+                        yandexListDevices.payload.devices.forEach((device_list, index_list) => {
+                            if (device_list.id == device.id) {
+                                device_list.capabilities.forEach((cap_list, index_cap_list) => {
+                                    if (cap_list.type == cap.type) {
+                                        sendlist.request_id = requestid;
+                                        sendlist.payload.devices[index_list].capabilities[index_cap_list].state.action_result = {"status": "DONE"};
+                                        delete(sendlist.payload.devices[index_list].capabilities[index_cap_list].state.value);
+                                        logger.trace("SEND LIST:", JSON.stringify(sendlist));
+                                    }
+                                })
+                            }
+                        });
+                        break;
+                }
+            });
+        });
+        return (JSON.stringify(sendlist));
     }
 
     async getUserInfo(token) {
