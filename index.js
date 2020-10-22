@@ -44,6 +44,10 @@ const requestListener = async function (req, res) {
             res.writeHead(200);
             res.end(await vacuumCleaner.cleanStartRoom("hallway"));
             break;
+        case "/clean_robot/room/bathroom":
+            res.writeHead(200);
+            res.end(await vacuumCleaner.cleanStartRoom("bathroom"));
+            break;
         case "/clean_robot/full":
             res.writeHead(200);
             res.end(await vacuumCleaner.cleanStartFull());
@@ -52,38 +56,49 @@ const requestListener = async function (req, res) {
             res.writeHead(200);
             res.end(await vacuumCleaner.cleanReturnHome());
             break;
+        case "/smart_home/v1.0":
+            logger.info('/smart_home/v1.0');
+            res.writeHead(200);
+            res.end();
+            break;
         case "/smart_home/v1.0/user/devices":
-            if (yandexDialog.validateUserYandex(token)) {
+            if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
                 logger.info('/smart_home/v1.0/user/devices');
                 res.end(JSON.stringify(await yandexDialog.getDeviceListState(requestid)));
             }
             else {
+                logger.info('/smart_home/v1.0/user/devices - 403');
                 res.writeHead(403);
+                res.end();
             }
             break;
         case "/smart_home/v1.0/user/unlink":
-            if (yandexDialog.validateUserYandex(token)) {
+            if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
                 logger.info('/smart_home/v1.0/user/unlink');
                 res.end(JSON.stringify({"request_id": "1"}));
             }
             else {
+                logger.info('/smart_home/v1.0/user/unlink - 403');
                 res.writeHead(403);
+                res.end();
             }
             break;
         case "/smart_home/v1.0/user/devices/query":
-            if (yandexDialog.validateUserYandex(token)) {
+            if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
                 logger.info('/smart_home/v1.0/user/devices/query');
                 res.end(JSON.stringify(await yandexDialog.getDeviceListState(requestid)));
             }
             else {
+                logger.info('/smart_home/v1.0/user/devices/query - 403');
                 res.writeHead(403);
+                res.end();
             }
             break;
         case "/smart_home/v1.0/user/devices/action":
-            if (yandexDialog.validateUserYandex(token)) {
+            if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
                 logger.info('/smart_home/v1.0/user/devices/action');
                 let data = [];
@@ -98,6 +113,7 @@ const requestListener = async function (req, res) {
             }
             else {
                 res.writeHead(403);
+                res.end();
             }
             break;
         case "/smart_home/vacuum_cleaner": // Навык Общего типа заглушка
@@ -106,8 +122,8 @@ const requestListener = async function (req, res) {
             res.end(JSON.stringify(
                 {
                     "response": {
-                        "text": "Здравствуйте! Это мы, хороводоведы.",
-                        "tts": "Здравствуйте! Это мы, хоров+одо в+еды.",
+                        "text": "Начинаю убирать площадь",
+                        "tts": "Начинаю убирать площадь",
                         "buttons": [
                             {
                                 "title": "Надпись на кнопке",

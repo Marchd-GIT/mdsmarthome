@@ -212,6 +212,22 @@ class YandexDialog {
                                 }
                             }
                         ]
+                    },
+                    {
+                        "id": "215",
+                        "name": "Пылесос",
+                        "room": "Ванна",
+                        "type": "devices.types.vacuum_cleaner",
+                        "capabilities": [
+                            {
+                                "type": "devices.capabilities.on_off",
+                                "retrievable": false,
+                                "state": {
+                                    "instance": "on",
+                                    "value": false
+                                }
+                            }
+                        ]
                     }
                 ]
             }
@@ -223,7 +239,9 @@ class YandexDialog {
         let logger = log4js.getLogger("validateUserYandex");
         let user_info = await this.getUserInfo(token);
         logger.trace("Login: ", user_info.login);
-        return user_info && user_info.login == "MarchD" ? true : false
+        return (user_info
+        && user_info.login.match(/MarchD|furlize/)
+        ) ? true : false
     }
 
     async runActionOnOff(id) {
@@ -263,6 +281,9 @@ class YandexDialog {
                     break;
                 case "214":
                     vacuumCleaner.cleanStartRoom("hallway");
+                    break;
+                case "215":
+                    vacuumCleaner.cleanStartRoom("bathroom");
                     break;
             }
         }
@@ -326,6 +347,8 @@ class YandexDialog {
     }
 
     async getUserInfo(token) {
+        let logger = log4js.getLogger("getUserInfo");
+        logger.trace("Token: " ,token);
         const user_info = await cache.cacheHttpGetJson(token, app_config.oauth.userinfo_url, {headers: {"Authorization": "OAuth " + token}});
         return user_info;
     }

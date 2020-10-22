@@ -18,7 +18,7 @@ class Cache {
         let result = cache ? JSON.parse(cache) : false;
         if (!result) {
             try {
-                response = await
+                let response = await
                     fetch(url, opts);
                 result = await
                     response.json();
