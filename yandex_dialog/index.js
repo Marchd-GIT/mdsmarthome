@@ -17,7 +17,9 @@ let lights = new Lights();
 
 
 class YandexDialog {
+
     async getDeviceListState(requestid) {
+        const cleaner_Status = await vacuumCleaner.cleanGetStatus();
         let yandexListDevices =
         {
             "request_id": requestid,
@@ -125,10 +127,10 @@ class YandexDialog {
                         "capabilities": [
                             {
                                 "type": "devices.capabilities.on_off",
-                                "retrievable": false,
+                                "retrievable": true,
                                 "state": {
                                     "instance": "on",
-                                    "value": false
+                                    "value": cleaner_Status
                                 }
                             }
                         ]
@@ -141,10 +143,10 @@ class YandexDialog {
                         "capabilities": [
                             {
                                 "type": "devices.capabilities.on_off",
-                                "retrievable": false,
+                                "retrievable": true,
                                 "state": {
                                     "instance": "on",
-                                    "value": false
+                                    "value": cleaner_Status
                                 }
                             }
                         ]
@@ -157,10 +159,10 @@ class YandexDialog {
                         "capabilities": [
                             {
                                 "type": "devices.capabilities.on_off",
-                                "retrievable": false,
+                                "retrievable": true,
                                 "state": {
                                     "instance": "on",
-                                    "value": false
+                                    "value": cleaner_Status
                                 }
                             }
                         ]
@@ -173,10 +175,10 @@ class YandexDialog {
                         "capabilities": [
                             {
                                 "type": "devices.capabilities.on_off",
-                                "retrievable": false,
+                                "retrievable": true,
                                 "state": {
                                     "instance": "on",
-                                    "value": false
+                                    "value": cleaner_Status
                                 }
                             }
                         ]
@@ -189,10 +191,10 @@ class YandexDialog {
                         "capabilities": [
                             {
                                 "type": "devices.capabilities.on_off",
-                                "retrievable": false,
+                                "retrievable": true,
                                 "state": {
                                     "instance": "on",
-                                    "value": false
+                                    "value": cleaner_Status
                                 }
                             }
                         ]
@@ -205,10 +207,10 @@ class YandexDialog {
                         "capabilities": [
                             {
                                 "type": "devices.capabilities.on_off",
-                                "retrievable": false,
+                                "retrievable": true,
                                 "state": {
                                     "instance": "on",
-                                    "value": false
+                                    "value": cleaner_Status
                                 }
                             }
                         ]
@@ -221,10 +223,10 @@ class YandexDialog {
                         "capabilities": [
                             {
                                 "type": "devices.capabilities.on_off",
-                                "retrievable": false,
+                                "retrievable": true,
                                 "state": {
                                     "instance": "on",
-                                    "value": false
+                                    "value": cleaner_Status
                                 }
                             }
                         ]

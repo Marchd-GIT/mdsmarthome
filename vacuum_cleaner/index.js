@@ -1,7 +1,7 @@
 const app_config = (require('read-appsettings-json').AppConfiguration).json;
 const log4js = require('log4js');
 
-const { MiioCommon } = require('../miio_common');
+const {MiioCommon} = require('../miio_common');
 
 let miioCommon = new MiioCommon();
 
@@ -15,6 +15,7 @@ let roomArray = [];
 
 
 class VacuumCleaner {
+
     async  cleanStartRoom(room) {
         roomArray = clean_start_one_room[1];
         roomArray[3] = rooms[room];
@@ -37,8 +38,13 @@ class VacuumCleaner {
          Cleaning = 3
          Returning = 4
          Docked = 5
+         Cleaning = 6
          */
         return (JSON.stringify(await miioCommon.sendMIIO(clean_get_state[0], clean_get_state[1], vacuum_settings)));
+    }
+
+    async cleanGetStatus() {
+        return ( await this.cleanGetState() == "[6]" ? true : false );
     }
 }
 

@@ -112,7 +112,7 @@ const requestListener = async function (req, res) {
                 });
             }
             else {
-                res.writeHead(403);
+                res.end(JSON.stringify(body));
                 res.end();
             }
             break;
