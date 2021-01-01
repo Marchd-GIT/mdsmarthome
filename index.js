@@ -65,7 +65,7 @@ const requestListener = async function (req, res) {
             if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
                 logger.info('/smart_home/v1.0/user/devices');
-                res.end(JSON.stringify(await yandexDialog.getDeviceListState(requestid)));
+                res.end(JSON.stringify(await yandexDialog.getDeviceListStateCache(requestid)));
             }
             else {
                 logger.info('/smart_home/v1.0/user/devices - 403');
@@ -89,7 +89,7 @@ const requestListener = async function (req, res) {
             if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
                 logger.info('/smart_home/v1.0/user/devices/query');
-                res.end(JSON.stringify(await yandexDialog.getDeviceListState(requestid)));
+                res.end(JSON.stringify(await yandexDialog.getDeviceListStateCache(requestid)));
             }
             else {
                 logger.info('/smart_home/v1.0/user/devices/query - 403');
@@ -150,6 +150,10 @@ async function init() {
     logger.info("start init");
     yandexListDevices = await yandexDialog.getDeviceListState("0");
     logger.info("init complete");
+    setInterval(function () {
+        yandexDialog.updateBackgroundDeviceListState();
+        logger.info("complete task");
+    },5000)
 }
 
 init();

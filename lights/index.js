@@ -20,10 +20,23 @@ class Lights {
         }
     }
 
+    async lampOn(lamp,num) {
+        let url = app_config.MD_lamps[lamp].url;
+        fetch(url+"/ctl?l" + num + "=1");
+        logger.info(url+"/ctl?l" + num + "=1");
+    }
+
+    async lampOff(lamp,num) {
+        let url = app_config.MD_lamps[lamp].url;
+        fetch(url +"/ctl?l" + num + "=0");
+        logger.info(url+"/ctl?l" + num + "=0");
+    }
+
+
     async lampSetValue(lamp,num,value) {
         let url = app_config.MD_lamps[lamp].url;
-        fetch(url+"/ctlv?l" + num + "="+value);
-        logger.info(url+"/ctlv?l" + num + "="+value);
+        fetch(url+"/ctlv/l" + num + "?value="+value);
+        logger.info(url+"/ctlv/l" + num + "?value="+value);
     }
 
     async getLampStatus(lamp,num) {

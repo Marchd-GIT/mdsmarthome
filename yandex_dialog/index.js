@@ -18,13 +18,27 @@ let lights = new Lights();
 
 class YandexDialog {
 
+
+    async updateBackgroundDeviceListState() {
+        let state = await this.getDeviceListState("cache");
+        cache.set("updateBackgroundDeviceListState", state);
+        this.sendDeviceStatus(state);
+    }
+
+    async getDeviceListStateCache(requestid) {
+        let result = cache.get("updateBackgroundDeviceListState");
+        result.request_id = requestid;
+        return (result);
+
+    }
+
     async getDeviceListState(requestid) {
         const cleaner_Status = await vacuumCleaner.cleanGetStatus();
         let yandexListDevices =
         {
             "request_id": requestid,
             "payload": {
-                "user_id": "321",
+                "user_id": app_config.yandex.user_id,
                 devices: [{
                     "id": "101",
                     "name": "Свет",
@@ -34,11 +48,31 @@ class YandexDialog {
                         {
                             "type": "devices.capabilities.on_off",
                             "retrievable": true,
+                            "reportable": true,
                             "state": {
                                 "instance": "on",
-                                "value": await lights.getLampStatus("4Lamps", 1)
+                                "value": await lights.getLampStatus("dimmers", 1)
                             }
-                        }
+                        }, {
+                            "type": "devices.capabilities.range",
+                            "state": {
+                                "instance": "brightness",
+                                "relative": true,
+                                "value": await lights.getLampValue("dimmers", 1),
+                            },
+                            "retrievable": true,
+                            "reportable": true,
+                            "parameters": {
+                                "instance": "brightness",
+                                "random_access": true,
+                                "range": {
+                                    "max": 100,
+                                    "min": 1,
+                                    "precision": 10
+                                },
+                                "unit": "unit.percent"
+                            }
+                        },
                     ],
                 }, {
                     "id": "102",
@@ -49,6 +83,7 @@ class YandexDialog {
                         {
                             "type": "devices.capabilities.on_off",
                             "retrievable": true,
+                            "reportable": true,
                             "state": {
                                 "instance": "on",
                                 "value": await lights.getLampStatus("4Lamps", 2)
@@ -64,6 +99,7 @@ class YandexDialog {
                         {
                             "type": "devices.capabilities.on_off",
                             "retrievable": true,
+                            "reportable": true,
                             "state": {
                                 "instance": "on",
                                 "value": await lights.getLampStatus("4Lamps", 3)
@@ -79,11 +115,31 @@ class YandexDialog {
                         {
                             "type": "devices.capabilities.on_off",
                             "retrievable": true,
+                            "reportable": true,
                             "state": {
                                 "instance": "on",
-                                "value": await lights.getLampStatus("4Lamps", 4)
+                                "value": await lights.getLampStatus("dimmers", 4)
                             }
-                        }
+                        }, {
+                            "type": "devices.capabilities.range",
+                            "state": {
+                                "instance": "brightness",
+                                "relative": true,
+                                "value": await lights.getLampValue("dimmers", 4),
+                            },
+                            "retrievable": true,
+                            "reportable": true,
+                            "parameters": {
+                                "instance": "brightness",
+                                "random_access": true,
+                                "range": {
+                                    "max": 100,
+                                    "min": 1,
+                                    "precision": 10
+                                },
+                                "unit": "unit.percent"
+                            }
+                        },
                     ],
                 }, {
                     "id": "105",
@@ -94,6 +150,7 @@ class YandexDialog {
                         {
                             "type": "devices.capabilities.on_off",
                             "retrievable": true,
+                            "reportable": true,
                             "state": {
                                 "instance": "on",
                                 "value": await lights.getLampStatus("bathroom", 1)
@@ -106,6 +163,7 @@ class YandexDialog {
                                 "value": await lights.getLampValue("bathroom", 1),
                             },
                             "retrievable": true,
+                            "reportable": true,
                             "parameters": {
                                 "instance": "brightness",
                                 "random_access": true,
@@ -128,6 +186,7 @@ class YandexDialog {
                             {
                                 "type": "devices.capabilities.on_off",
                                 "retrievable": true,
+                                "reportable": true,
                                 "state": {
                                     "instance": "on",
                                     "value": cleaner_Status
@@ -144,6 +203,7 @@ class YandexDialog {
                             {
                                 "type": "devices.capabilities.on_off",
                                 "retrievable": true,
+                                "reportable": true,
                                 "state": {
                                     "instance": "on",
                                     "value": cleaner_Status
@@ -160,6 +220,7 @@ class YandexDialog {
                             {
                                 "type": "devices.capabilities.on_off",
                                 "retrievable": true,
+                                "reportable": true,
                                 "state": {
                                     "instance": "on",
                                     "value": cleaner_Status
@@ -176,6 +237,7 @@ class YandexDialog {
                             {
                                 "type": "devices.capabilities.on_off",
                                 "retrievable": true,
+                                "reportable": true,
                                 "state": {
                                     "instance": "on",
                                     "value": cleaner_Status
@@ -192,6 +254,7 @@ class YandexDialog {
                             {
                                 "type": "devices.capabilities.on_off",
                                 "retrievable": true,
+                                "reportable": true,
                                 "state": {
                                     "instance": "on",
                                     "value": cleaner_Status
@@ -208,6 +271,7 @@ class YandexDialog {
                             {
                                 "type": "devices.capabilities.on_off",
                                 "retrievable": true,
+                                "reportable": true,
                                 "state": {
                                     "instance": "on",
                                     "value": cleaner_Status
@@ -224,6 +288,7 @@ class YandexDialog {
                             {
                                 "type": "devices.capabilities.on_off",
                                 "retrievable": true,
+                                "reportable": true,
                                 "state": {
                                     "instance": "on",
                                     "value": cleaner_Status
@@ -242,7 +307,7 @@ class YandexDialog {
         let user_info = await this.getUserInfo(token);
         logger.trace("Login: ", user_info.login);
         return (user_info
-        && user_info.login.match(/MarchD|furlize/)
+            && user_info.login.match(/MarchD|furlize/)
         ) ? true : false
     }
 
@@ -252,7 +317,7 @@ class YandexDialog {
         if (state != "[6]" || id < 199) {
             switch (id) {
                 case "101":
-                    lights.lampOnOff("4Lamps", 1);
+                    lights.lampOnOff("dimmers", 1);
                     break;
                 case "102":
                     lights.lampOnOff("4Lamps", 2);
@@ -261,7 +326,7 @@ class YandexDialog {
                     lights.lampOnOff("4Lamps", 3);
                     break;
                 case "104":
-                    lights.lampOnOff("4Lamps", 4);
+                    lights.lampOnOff("dimmers", 4);
                     break;
                 case "105":
                     lights.lampOnOff("bathroom", 1);
@@ -301,10 +366,21 @@ class YandexDialog {
                     lights.lampSetValue("bathroom", 1, value + await lights.getLampValue("bathroom", 1)) :
                     lights.lampSetValue("bathroom", 1, value);
                 break;
+            case "101":
+                relative ?
+                    lights.lampSetValue("dimmers", 1, value + await lights.getLampValue("dimmers", 1)) :
+                    lights.lampSetValue("dimmers", 1, value);
+                break;
+            case "104":
+                relative ?
+                    lights.lampSetValue("dimmers", 4, value + await lights.getLampValue("dimmers", 4)) :
+                    lights.lampSetValue("dimmers", 4, value);
+                break;
+
         }
     }
 
-    runActionControl(data,yandexListDevices,requestid) {
+    runActionControl(data, yandexListDevices, requestid) {
         let sendlist = Object.assign({}, yandexListDevices);
         let dataObj = JSON.parse(data);
         dataObj.payload.devices.forEach((device, index) => {
@@ -345,14 +421,38 @@ class YandexDialog {
                 }
             });
         });
+        this.updateBackgroundDeviceListState();
         return (JSON.stringify(sendlist));
     }
 
     async getUserInfo(token) {
         let logger = log4js.getLogger("getUserInfo");
-        logger.trace("Token: " ,token);
-        const user_info = await cache.cacheHttpGetJson(token, app_config.oauth.userinfo_url, {headers: {"Authorization": "OAuth " + token}});
+        logger.trace("Token: ", token);
+        const user_info = await cache.cacheHttpGetJson(token, app_config.yandex.oauth.userinfo_url, {headers: {"Authorization": "OAuth " + token}});
         return user_info;
+    }
+
+    async sendDeviceStatus(devState) {
+        let logger = log4js.getLogger("sendDeviceStatus");
+        let devinfo = {
+            "ts": ((new Date()) * 1).toString().slice(0, 10)*1,
+            "payload": devState.payload
+        };
+        logger.trace("sendDeviceStatus URL: ", app_config.yandex.skill_callback_url + '/' + app_config.yandex.skill_id + '/callback/state');
+
+        let response = await fetch(app_config.yandex.skill_callback_url + '/' + app_config.yandex.skill_id + '/callback/state',
+            {
+                method: 'POST',
+                headers: {
+                    "Authorization": "OAuth " + app_config.yandex.skill_owner_token,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(devinfo)
+            }
+        );
+        let result = await response.text();
+
+        logger.trace("sendDeviceStatus: ", result);
     }
 
 }
