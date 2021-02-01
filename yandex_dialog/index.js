@@ -86,9 +86,28 @@ class YandexDialog {
                             "reportable": true,
                             "state": {
                                 "instance": "on",
-                                "value": await lights.getLampStatus("4Lamps", 2)
+                                "value": await lights.getLampStatus("dimmers", 5)
                             }
-                        }
+                        }, {
+                            "type": "devices.capabilities.range",
+                            "state": {
+                                "instance": "brightness",
+                                "relative": true,
+                                "value": await lights.getLampValue("dimmers", 5),
+                            },
+                            "retrievable": true,
+                            "reportable": true,
+                            "parameters": {
+                                "instance": "brightness",
+                                "random_access": true,
+                                "range": {
+                                    "max": 100,
+                                    "min": 1,
+                                    "precision": 10
+                                },
+                                "unit": "unit.percent"
+                            }
+                        },
                     ],
                 }, {
                     "id": "103",
@@ -102,9 +121,28 @@ class YandexDialog {
                             "reportable": true,
                             "state": {
                                 "instance": "on",
-                                "value": await lights.getLampStatus("4Lamps", 3)
+                                "value": await lights.getLampStatus("dimmers", 2)
                             }
-                        }
+                        }, {
+                            "type": "devices.capabilities.range",
+                            "state": {
+                                "instance": "brightness",
+                                "relative": true,
+                                "value": await lights.getLampValue("dimmers", 2),
+                            },
+                            "retrievable": true,
+                            "reportable": true,
+                            "parameters": {
+                                "instance": "brightness",
+                                "random_access": true,
+                                "range": {
+                                    "max": 100,
+                                    "min": 1,
+                                    "precision": 10
+                                },
+                                "unit": "unit.percent"
+                            }
+                        },
                     ],
                 }, {
                     "id": "104",
@@ -295,7 +333,60 @@ class YandexDialog {
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        "id": "106",
+                        "name": "Свет",
+                        "room": "Прихожая",
+                        "type": "devices.types.light",
+                        "capabilities": [
+                            {
+                                "type": "devices.capabilities.on_off",
+                                "retrievable": true,
+                                "reportable": true,
+                                "state": {
+                                    "instance": "on",
+                                    "value": await lights.getLampStatus("dimmers", 3)
+                                }
+                            }, {
+                                "type": "devices.capabilities.range",
+                                "state": {
+                                    "instance": "brightness",
+                                    "relative": true,
+                                    "value": await lights.getLampValue("dimmers", 3),
+                                },
+                                "retrievable": true,
+                                "reportable": true,
+                                "parameters": {
+                                    "instance": "brightness",
+                                    "random_access": true,
+                                    "range": {
+                                        "max": 100,
+                                        "min": 1,
+                                        "precision": 10
+                                    },
+                                    "unit": "unit.percent"
+                                }
+                            },
+                        ],
+                    },
+                    {
+                        "id": "107",
+                        "name": "Верхний свет",
+                        "room": "Гостиная",
+                        "type": "devices.types.light",
+                        "capabilities": [
+                            {
+                                "type": "devices.capabilities.on_off",
+                                "retrievable": true,
+                                "reportable": true,
+                                "state": {
+                                    "instance": "on",
+                                    "value": await lights.getLampStatus("4Lamps", 4)
+                                }
+                            }
+                        ],
+                    },
                 ]
             }
         };
@@ -314,22 +405,30 @@ class YandexDialog {
     async runActionOnOff(id) {
         let state = await vacuumCleaner.cleanGetState();
         logger.trace("state: ", state);
-        if (state != "[6]" || id < 199) {
+        let vacuum_cleaning_now =  ( state == "[3]" || state == "[6]" )  ? true : false;
+        logger.trace("vacuum_cleening: ", vacuum_cleaning_now);
+        if (!vacuum_cleaning_now || id < 199) {
             switch (id) {
                 case "101":
                     lights.lampOnOff("dimmers", 1);
                     break;
                 case "102":
-                    lights.lampOnOff("4Lamps", 2);
+                    lights.lampOnOff("dimmers", 5);
                     break;
                 case "103":
-                    lights.lampOnOff("4Lamps", 3);
+                    lights.lampOnOff("dimmers", 2);
                     break;
                 case "104":
                     lights.lampOnOff("dimmers", 4);
                     break;
                 case "105":
                     lights.lampOnOff("bathroom", 1);
+                    break;
+                case "106":
+                    lights.lampOnOff("dimmers", 3);
+                    break;
+                case "107":
+                    lights.lampOnOff("4Lamps", 4);
                     break;
                 case "200":
                     vacuumCleaner.cleanStartFull();
@@ -375,6 +474,21 @@ class YandexDialog {
                 relative ?
                     lights.lampSetValue("dimmers", 4, value + await lights.getLampValue("dimmers", 4)) :
                     lights.lampSetValue("dimmers", 4, value);
+                break;
+            case "103":
+                relative ?
+                    lights.lampSetValue("dimmers", 2, value + await lights.getLampValue("dimmers", 2)) :
+                    lights.lampSetValue("dimmers", 2, value);
+                break;
+            case "106":
+                relative ?
+                    lights.lampSetValue("dimmers", 3, value + await lights.getLampValue("dimmers", 3)) :
+                    lights.lampSetValue("dimmers", 3, value);
+                break;
+            case "102":
+                relative ?
+                    lights.lampSetValue("dimmers", 5, value + await lights.getLampValue("dimmers", 5)) :
+                    lights.lampSetValue("dimmers", 5, value);
                 break;
 
         }
@@ -435,7 +549,7 @@ class YandexDialog {
     async sendDeviceStatus(devState) {
         let logger = log4js.getLogger("sendDeviceStatus");
         let devinfo = {
-            "ts": ((new Date()) * 1).toString().slice(0, 10)*1,
+            "ts": ((new Date()) * 1).toString().slice(0, 10) * 1,
             "payload": devState.payload
         };
         logger.trace("sendDeviceStatus URL: ", app_config.yandex.skill_callback_url + '/' + app_config.yandex.skill_id + '/callback/state');
@@ -452,7 +566,8 @@ class YandexDialog {
         );
         let result = await response.text();
 
-        logger.trace("sendDeviceStatus: ", result);
+        logger.trace("sendDeviceStatusRequest: ",JSON.stringify(devinfo) );
+        logger.trace("sendDeviceStatusResponse: ", result);
     }
 
 }
