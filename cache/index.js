@@ -37,13 +37,13 @@ class Cache {
     async get(key) {
         let logger = log4js.getLogger("cacheGet");
         let cache = await  redis.get(key);
-        logger.info(key);
+        logger.trace(key);
         return( cache ? JSON.parse(cache) : false );
     }
 
     async set(key,value) {
         let logger = log4js.getLogger("cacheSet");
-        logger.info(key,cacheCommonTTL);
+        logger.trace(key,cacheCommonTTL);
         redis.set(key, JSON.stringify(value), "EX", cacheCommonTTL);
     }
 

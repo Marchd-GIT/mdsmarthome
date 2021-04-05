@@ -387,6 +387,23 @@ class YandexDialog {
                             }
                         ],
                     },
+                    {
+                        "id": "108",
+                        "name": "Экран",
+                        "room": "Гостиная",
+                        "type": "devices.types.openable",
+                        "capabilities": [
+                            {
+                                "type": "devices.capabilities.on_off",
+                                "retrievable": true,
+                                "reportable": true,
+                                "state": {
+                                    "instance": "on",
+                                    "value": await lights.getLampStatus("4Lamps", 3)
+                                }
+                            }
+                        ],
+                    },
                 ]
             }
         };
@@ -394,6 +411,9 @@ class YandexDialog {
     }
 
     async validateUserYandex(token) {
+        if(!token){
+            return false;
+        }
         let logger = log4js.getLogger("validateUserYandex");
         let user_info = await this.getUserInfo(token);
         logger.trace("Login: ", user_info.login);
@@ -429,6 +449,9 @@ class YandexDialog {
                     break;
                 case "107":
                     lights.lampOnOff("4Lamps", 4);
+                    break;
+                case "108":
+                    lights.lampOnOff("4Lamps", 3);
                     break;
                 case "200":
                     vacuumCleaner.cleanStartFull();
@@ -540,9 +563,12 @@ class YandexDialog {
     }
 
     async getUserInfo(token) {
+        if(!token){
+            return "none";
+        }
         let logger = log4js.getLogger("getUserInfo");
         logger.trace("Token: ", token);
-        const user_info = await cache.cacheHttpGetJson(token, app_config.yandex.oauth.userinfo_url, {headers: {"Authorization": "OAuth " + token}});
+        const user_info = token ? await cache.cacheHttpGetJson(token, app_config.yandex.oauth.userinfo_url, {headers: {"Authorization": "OAuth " + token}}):"none";
         return user_info;
     }
 

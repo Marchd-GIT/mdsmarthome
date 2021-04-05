@@ -22,7 +22,14 @@ const requestListener = async function (req, res) {
     res.setHeader("Content-Type", "application/json");
     let token = req.headers['authorization'] ? req.headers['authorization'].replace("Bearer ", "") : "";
     let requestid = req.headers['x-request-id'] ? req.headers['x-request-id'] : "";
+    logger.info(JSON.stringify(
+        {
+            "url" : req.url,
+            "headers" : req.headers,
+            "user": await yandexDialog.getUserInfo(token)
 
+        }
+    ));
     switch (req.url) {
         case "/clean_robot/room/hall":
             res.writeHead(200);
@@ -64,7 +71,6 @@ const requestListener = async function (req, res) {
         case "/smart_home/v1.0/user/devices":
             if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
-                logger.info('/smart_home/v1.0/user/devices');
                 res.end(JSON.stringify(await yandexDialog.getDeviceListStateCache(requestid)));
             }
             else {
@@ -76,11 +82,10 @@ const requestListener = async function (req, res) {
         case "/smart_home/v1.0/user/unlink":
             if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
-                logger.info('/smart_home/v1.0/user/unlink');
                 res.end(JSON.stringify({"request_id": "1"}));
             }
             else {
-                logger.info('/smart_home/v1.0/user/unlink - 403');
+                logger.warn('/smart_home/v1.0/user/unlink - 403');
                 res.writeHead(403);
                 res.end();
             }
@@ -88,11 +93,10 @@ const requestListener = async function (req, res) {
         case "/smart_home/v1.0/user/devices/query":
             if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
-                logger.info('/smart_home/v1.0/user/devices/query');
                 res.end(JSON.stringify(await yandexDialog.getDeviceListStateCache(requestid)));
             }
             else {
-                logger.info('/smart_home/v1.0/user/devices/query - 403');
+                logger.warn('/smart_home/v1.0/user/devices/query - 403');
                 res.writeHead(403);
                 res.end();
             }
@@ -100,7 +104,6 @@ const requestListener = async function (req, res) {
         case "/smart_home/v1.0/user/devices/action":
             if (await yandexDialog.validateUserYandex(token)) {
                 res.writeHead(200);
-                logger.info('/smart_home/v1.0/user/devices/action');
                 let data = [];
                 req.on('data', chunk => {
                     data.push(chunk)
@@ -112,7 +115,8 @@ const requestListener = async function (req, res) {
                 });
             }
             else {
-                res.end(JSON.stringify(body));
+                logger.warn('/smart_home/v1.0/user/devices/action - 403');
+                res.writeHead(403);
                 res.end();
             }
             break;
@@ -141,18 +145,19 @@ const requestListener = async function (req, res) {
         default:
             res.writeHead(200);
             res.end(JSON.stringify({error: "Command not found, return 200 ok"}));
-            logger.error(req.url, req.data, "ok");
+            logger.warn(req.url, req.data? req.data : "request data empty", "Command not found, return 200 ok");
     }
 };
 
 
 async function init() {
+    let logger = log4js.getLogger("initServer");
     logger.info("start init");
     yandexListDevices = await yandexDialog.getDeviceListState("0");
     logger.info("init complete");
     setInterval(function () {
         yandexDialog.updateBackgroundDeviceListState();
-        logger.info("complete task");
+        logger.trace("complete task");
     },5000)
 }
 

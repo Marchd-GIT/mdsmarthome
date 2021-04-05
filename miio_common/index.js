@@ -9,10 +9,10 @@ class MiioCommon {
         try {
             let device = await
                 miio.device(settings);
-            logger.info("miIO Connect to : ", JSON.stringify(device.miioModel));
+            logger.trace("miIO Connect to : ", JSON.stringify(device.miioModel));
             let mess = await
                 device.call(method, parameters, {retries: 5});
-            logger.info(method, JSON.stringify(parameters), JSON.stringify(mess));
+            logger.trace(method, JSON.stringify(parameters), JSON.stringify(mess));
             device.destroy();
             return (mess);
         }
