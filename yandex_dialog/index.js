@@ -26,7 +26,8 @@ class YandexDialog {
     }
 
     async getDeviceListStateCache(requestid) {
-        let result = cache.get("updateBackgroundDeviceListState");
+        let result = await cache.get("updateBackgroundDeviceListState");
+        //let result = JSON.parse(JSON.stringify(cache));
         result.request_id = requestid;
         return (result);
 
@@ -39,7 +40,8 @@ class YandexDialog {
             "request_id": requestid,
             "payload": {
                 "user_id": app_config.yandex.user_id,
-                devices: [{
+                devices: [
+		{
                     "id": "101",
                     "name": "Свет",
                     "room": "Коридор",
@@ -74,7 +76,8 @@ class YandexDialog {
                             }
                         },
                     ],
-                }, {
+                }, 
+		{
                     "id": "102",
                     "name": "Свет",
                     "room": "Кухня",
@@ -387,6 +390,43 @@ class YandexDialog {
                             }
                         ],
                     },
+                {
+                    "id": "109",
+                    "name": "Абажур",
+                    "room": "Гостиная",
+                    "type": "devices.types.light",
+                    "capabilities": [
+                        {
+                            "type": "devices.capabilities.on_off",
+                            "retrievable": true,
+                            "reportable": true,
+                            "state": {
+                                "instance": "on",
+                                "value": await lights.getLampStatus("dimmers", 6)
+                            }
+                        }, {
+                            "type": "devices.capabilities.range",
+                            "state": {
+                                "instance": "brightness",
+                                "relative": true,
+                                "value": await lights.getLampValue("dimmers", 6),
+                            },
+                            "retrievable": true,
+                            "reportable": true,
+                            "parameters": {
+                                "instance": "brightness",
+                                "random_access": true,
+                                "range": {
+                                    "max": 100,
+                                    "min": 1,
+                                    "precision": 10
+                                },
+                                "unit": "unit.percent"
+                            }
+                        },
+                    ],
+                },
+
                     {
                         "id": "108",
                         "name": "Экран",
@@ -422,7 +462,7 @@ class YandexDialog {
         ) ? true : false
     }
 
-    async runActionOnOff(id) {
+    async runActionOnOff(id,enable) {
         let state = await vacuumCleaner.cleanGetState();
         logger.trace("state: ", state);
         let vacuum_cleaning_now =  ( state == "[3]" || state == "[6]" )  ? true : false;
@@ -430,28 +470,31 @@ class YandexDialog {
         if (!vacuum_cleaning_now || id < 199) {
             switch (id) {
                 case "101":
-                    lights.lampOnOff("dimmers", 1);
+                    enable ? lights.lampOn("dimmers", 1): lights.lampOff("dimmers", 1);
                     break;
                 case "102":
-                    lights.lampOnOff("dimmers", 5);
+                    enable ? lights.lampOn("dimmers", 5): lights.lampOff("dimmers", 5);
                     break;
                 case "103":
-                    lights.lampOnOff("dimmers", 2);
+                    enable ? lights.lampOn("dimmers", 2): lights.lampOff("dimmers", 2);
                     break;
                 case "104":
-                    lights.lampOnOff("dimmers", 4);
+                    enable ? lights.lampOn("dimmers", 4): lights.lampOff("dimmers", 4);
                     break;
                 case "105":
-                    lights.lampOnOff("bathroom", 1);
+                    enable ? lights.lampOn("bathroom", 1): lights.lampOff("bathroom", 1);
                     break;
                 case "106":
-                    lights.lampOnOff("dimmers", 3);
+                    enable ? lights.lampOn("dimmers", 3): lights.lampOff("dimmers", 3);
+                    break;
+                case "109":
+                    enable ? lights.lampOn("dimmers", 6): lights.lampOff("dimmers", 6);
                     break;
                 case "107":
-                    lights.lampOnOff("4Lamps", 4);
+                    enable ? lights.lampOn("4Lamps", 4): lights.lampOff("4Lamps", 4);
                     break;
                 case "108":
-                    lights.lampOnOff("4Lamps", 3);
+                    enable ? lights.lampOn("4Lamps", 3): lights.lampOff("4Lamps", 3);
                     break;
                 case "200":
                     vacuumCleaner.cleanStartFull();
@@ -513,11 +556,16 @@ class YandexDialog {
                     lights.lampSetValue("dimmers", 5, value + await lights.getLampValue("dimmers", 5)) :
                     lights.lampSetValue("dimmers", 5, value);
                 break;
-
+            case "109":
+                relative ?
+                    lights.lampSetValue("dimmers", 6, value + await lights.getLampValue("dimmers", 6)) :
+                    lights.lampSetValue("dimmers", 6, value);
+                break;
         }
     }
 
     runActionControl(data, yandexListDevices, requestid) {
+        let logger = log4js.getLogger("runActionControl");
         let sendlist = Object.assign({}, yandexListDevices);
         let dataObj = JSON.parse(data);
         dataObj.payload.devices.forEach((device, index) => {
@@ -540,8 +588,10 @@ class YandexDialog {
                         });
                         break;
                     case  "devices.capabilities.on_off" :
-                        this.runActionOnOff(device.id, index, index_cap);
-                        logger.trace("RUN devices.capabilities.on_off", device.id);
+
+                        this.runActionOnOff(device.id,cap.state.value);
+
+                        logger.info("RUN devices.capabilities.on_off", device.id,cap.state.value );
                         yandexListDevices.payload.devices.forEach((device_list, index_list) => {
                             if (device_list.id == device.id) {
                                 device_list.capabilities.forEach((cap_list, index_cap_list) => {
